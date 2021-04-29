@@ -13,6 +13,19 @@ class _PriceScreenState extends State<PriceScreen> {
   String cryptoCurrency = cryptoList.first,
       countryCurrency = currenciesList.first,
       currencyValue = '?';
+
+  List<Widget> allCrypto() {
+    // List worth = [];
+    // for (String values in cryptoList) {updateValues(values, countryCurrency);
+    // }
+    return List.generate(
+        cryptoList.length,
+        (index) => ReusableCard(
+            cryptoCurrency: cryptoList[index],
+            currencyValue: currencyValue,
+            countryCurrency: countryCurrency));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -84,10 +97,11 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          ReusableCard(
-              currencyValue: currencyValue,
-              countryCurrency: countryCurrency,
-              cryptoCurrency: cryptoCurrency),
+          Expanded(
+            child: ListView(
+              children: allCrypto(),
+            ),
+          ),
           Container(
             height: 150.0,
             alignment: Alignment.center,
@@ -103,14 +117,15 @@ class _PriceScreenState extends State<PriceScreen> {
 
 class ReusableCard extends StatelessWidget {
   const ReusableCard({
+    Key key,
+    @required this.cryptoCurrency,
     @required this.currencyValue,
     @required this.countryCurrency,
-    @required this.cryptoCurrency,
-  });
+  }) : super(key: key);
 
+  final String cryptoCurrency;
   final String currencyValue;
   final String countryCurrency;
-  final String cryptoCurrency;
 
   @override
   Widget build(BuildContext context) {

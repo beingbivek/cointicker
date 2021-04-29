@@ -28,4 +28,7 @@ const List<String> cryptoList = [
   'LTC',
 ];
 
-class CoinData {}
+class CoinData {
+  CoinData({this.cryptoCurrency, this.countryCurrency});
+  final cryptoCurrency, countryCurrency;
+}
