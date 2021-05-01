@@ -1,3 +1,5 @@
+import 'package:bitcoin_ticker/services/networking.dart';
+
 const List<String> currenciesList = [
   'AUD',
   'BRL',
@@ -29,6 +31,26 @@ const List<String> cryptoList = [
 ];
 
 class CoinData {
-  CoinData({this.cryptoCurrency, this.countryCurrency});
-  final cryptoCurrency, countryCurrency;
+  bool nrpSelected = false;
+  double price;
+  Future getCoinData(String selectedCurrency) async {
+    Map<String, String> cryptoPrices = {};
+    for (String crypto in cryptoList) {
+      if (selectedCurrency == 'NRP') {
+        nrpSelected = true;
+        selectedCurrency = 'INR';
+      }
+      NetworkHelper networkHelper = NetworkHelper(crypto, selectedCurrency);
+      var values = await networkHelper.getData();
+      if (nrpSelected) {
+        price = values["rate"] * 1.6;
+        selectedCurrency = 'NRP';
+      } else {
+        price = values["rate"];
+      }
+      nrpSelected = false;
+      cryptoPrices[crypto] = price.toStringAsFixed(0);
+    }
+    return cryptoPrices;
+  }
 }

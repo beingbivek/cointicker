@@ -1,4 +1,3 @@
-import 'package:bitcoin_ticker/services/networking.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../services/coin_data.dart';
@@ -10,55 +9,53 @@ class PriceScreen extends StatefulWidget {
 }
 
 class _PriceScreenState extends State<PriceScreen> {
-  String cryptoCurrency = cryptoList.first,
-      countryCurrency = currenciesList.first,
-      currencyValue = '?';
+  String countryCurrency = currenciesList.first;
 
-  List<Widget> allCrypto() {
-    // List worth = [];
-    // for (String values in cryptoList) {updateValues(values, countryCurrency);
-    // }
-    return List.generate(
-        cryptoList.length,
-        (index) => ReusableCard(
-            cryptoCurrency: cryptoList[index],
-            currencyValue: currencyValue,
-            countryCurrency: countryCurrency));
+  Column makeCards() {
+    List<CryptoCard> cryptoCards = [];
+    for (String crypto in cryptoList) {
+      cryptoCards.add(
+        CryptoCard(
+          cryptoCurrency: crypto,
+          countryCurrency: countryCurrency,
+          value: isWaiting ? '?' : coinValues[crypto],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: cryptoCards,
+    );
   }
 
   @override
   void initState() {
     super.initState();
-    updateValues(cryptoCurrency, countryCurrency);
+    getData();
   }
 
-  void updateValues(cryptoCurrency, countryCurrency) async {
-    if (countryCurrency == 'NRP') {
-      countryCurrency = 'INR';
-      NetworkHelper networkHelper =
-          NetworkHelper(cryptoCurrency, countryCurrency);
-      var values = await networkHelper.getData();
-      countryCurrency = 'NRP';
+  Map<String, String> coinValues = {};
+  bool isWaiting = false;
+
+  void getData() async {
+    isWaiting = true;
+    try {
+      var data = await CoinData().getCoinData(countryCurrency);
+      isWaiting = false;
       setState(() {
-        currencyValue = (values["rate"] * 1.6).toStringAsFixed(2);
+        coinValues = data;
       });
-      return;
+    } catch (e) {
+      print(e);
     }
-    NetworkHelper networkHelper =
-        NetworkHelper(cryptoCurrency, countryCurrency);
-    var values = await networkHelper.getData();
-    setState(() {
-      currencyValue = values["rate"].toStringAsFixed(2);
-    });
   }
 
   CupertinoPicker iOSPicker() {
     return CupertinoPicker(
       backgroundColor: Colors.lightBlue,
       itemExtent: 32.0,
-      onSelectedItemChanged: (countryCurrency) {
-        currencyValue = '?';
-        updateValues(cryptoCurrency, countryCurrency);
+      onSelectedItemChanged: (selectedIndex) {
+        countryCurrency = currenciesList[selectedIndex];
       },
       children: List.generate(
         currenciesList.length,
@@ -78,10 +75,9 @@ class _PriceScreenState extends State<PriceScreen> {
         ),
       ),
       onChanged: (value) {
-        currencyValue = '?';
         setState(() {
           countryCurrency = value;
-          updateValues(cryptoCurrency, countryCurrency);
+          getData();
         });
       },
     );
@@ -97,11 +93,7 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Expanded(
-            child: ListView(
-              children: allCrypto(),
-            ),
-          ),
+          makeCards(),
           Container(
             height: 150.0,
             alignment: Alignment.center,
@@ -115,16 +107,15 @@ class _PriceScreenState extends State<PriceScreen> {
   }
 }
 
-class ReusableCard extends StatelessWidget {
-  const ReusableCard({
-    Key key,
-    @required this.cryptoCurrency,
-    @required this.currencyValue,
-    @required this.countryCurrency,
-  }) : super(key: key);
+class CryptoCard extends StatelessWidget {
+  CryptoCard({
+    this.cryptoCurrency,
+    this.value,
+    this.countryCurrency,
+  });
 
   final String cryptoCurrency;
-  final String currencyValue;
+  final String value;
   final String countryCurrency;
 
   @override
@@ -140,7 +131,7 @@ class ReusableCard extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
           child: Text(
-            '1 $cryptoCurrency = $currencyValue $countryCurrency',
+            '1 $cryptoCurrency = $value $countryCurrency',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 20.0,
